@@ -5,18 +5,21 @@ import { Feather } from "@expo/vector-icons"
 import WeatherRow from "../../components/WeatherRow/WeatherRow"
 import WeatherListItem from "../../components/WeatherListItem/WeatherListItem"
 import { SafeAreaView } from "react-native-safe-area-context"
+import { Image, ImageSource } from "expo-image"
+import { Asset, useAssets } from "expo-asset"
 
 const Weather = () => {
+  const [assets, assetsError] = useAssets([
+    require("../../../assets/weather/clear.png"),
+    require("../../../assets/weather/cloud.png"),
+    require("../../../assets/weather/clear.png"),
+    require("../../../assets/weather/mist.png"),
+    require("../../../assets/weather/rain.png"),
+    require("../../../assets/weather/snow.png"),
+  ])
+
   const [city, setCity] = useState("Moscow")
-  const [weatherIcon, setWeatherIcon] = useState<
-    | "cloud"
-    | "sun"
-    | "cloud-lightning"
-    | "cloud-drizzle"
-    | "cloud-rain"
-    | "cloud-snow"
-    | "cloud-off"
-  >("cloud-off")
+  const [weatherIcon, setWeatherIcon] = useState<Asset>()
   const [temp, setTemp] = useState("0")
   const [tempMin, setTempMin] = useState("0")
   const [tempMax, setTempMax] = useState("0")
@@ -43,29 +46,29 @@ const Weather = () => {
   useEffect(() => {
     if (data) {
       setGlobalError(false)
-      if (data?.weather[0]) {
+      if (data?.weather[0] && assets) {
         setWeather(data.weather[0].description)
         switch (data.weather[0].main) {
           case "Clouds":
-            setWeatherIcon("cloud")
+            setWeatherIcon(assets[1])
             break
           case "Clear":
-            setWeatherIcon("sun")
+            setWeatherIcon(assets[0])
             break
           case "Thunderstorm":
-            setWeatherIcon("cloud-lightning")
+            setWeatherIcon(assets[3])
             break
           case "Drizzle":
-            setWeatherIcon("cloud-drizzle")
+            setWeatherIcon(assets[3])
             break
           case "Rain":
-            setWeatherIcon("cloud-rain")
+            setWeatherIcon(assets[3])
             break
           case "Snow":
-            setWeatherIcon("cloud-snow")
+            setWeatherIcon(assets[4])
             break
           default:
-            setWeatherIcon("cloud-off")
+            setWeatherIcon(assets[2])
         }
       }
 
@@ -90,7 +93,7 @@ const Weather = () => {
     }
   }, [data])
 
-  if (isLoading) {
+  if (isLoading || !assets) {
     return (
       <View className="flex-1 bg-main-200 items-center justify-center p-3">
         <Feather name="sun" size={100} color="#3c97ff" />
@@ -101,7 +104,7 @@ const Weather = () => {
     )
   }
 
-  if (error || data === undefined || globalError) {
+  if (error || data === undefined || globalError || assetsError) {
     return (
       <View className="flex-1 bg-main-200 items-center justify-center p-3">
         <Feather name="cloud-off" size={150} color="white" />
@@ -135,7 +138,13 @@ const Weather = () => {
           {weather}
         </Text>
 
-        <Feather name={weatherIcon} size={150} color="white" />
+        <Image
+          style={{ width: 150, height: 150 }}
+          source={weatherIcon as ImageSource}
+          placeholder="image"
+          contentFit="cover"
+          transition={1000}
+        />
 
         <Text className="text-6xl mt-10 font-bold text-white text-center ">
           {temp}°
