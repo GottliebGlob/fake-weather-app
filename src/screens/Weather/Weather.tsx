@@ -5,7 +5,7 @@ import WeatherListItem from "../../components/WeatherListItem/WeatherListItem"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { Image, ImageSource } from "expo-image"
 import { Asset, useAssets } from "expo-asset"
-import { useWeather } from "../../components/utils/queries"
+import { useGeolocation, useWeather } from "../../components/utils/queries"
 import { toCelsius } from "../../components/helpers/helpers"
 import LoadingScreen from "../../components/LoadingScreen/LoadingScreen"
 import ErrorScreen from "../../components/ErrorScreen/ErrorScreen"
@@ -21,7 +21,7 @@ const Weather = () => {
     require("../../../assets/weather/snow.png"),
   ])
 
-  const [city, setCity] = useState("Moscow")
+  const [city, setCity] = useState("London")
   const [weatherIcon, setWeatherIcon] = useState<Asset>()
   const [temp, setTemp] = useState("0")
   const [tempMin, setTempMin] = useState("0")
@@ -34,6 +34,7 @@ const Weather = () => {
   const [globalError, setGlobalError] = useState(false)
 
   const { data, isLoading, error, refetch } = useWeather(city)
+  const { data: geoData, isLoading: isGeoLoading } = useGeolocation()
 
   useEffect(() => {
     if (data) {
@@ -84,7 +85,13 @@ const Weather = () => {
     }
   }, [data])
 
-  if (isLoading || !assets) {
+  useEffect(() => {
+    if (geoData) {
+      setCity(geoData)
+    }
+  }, [geoData])
+
+  if (isLoading || isGeoLoading || !assets) {
     return <LoadingScreen />
   }
 
